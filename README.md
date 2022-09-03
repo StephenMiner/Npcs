@@ -19,8 +19,13 @@ permission: npcs.commands.setskin
 This command will set the skin of the npc in question to the skin saved in the skin file with the skin-id id;
 
 /editNpc [npc-id] [trigger] [type] [add-or-remove] [arg]
+
+permission: npcs.commands.edit
+
 This command define what the npc will do when you left or right click it which are the triggers. This command is a little complicated so follow the tab completer for this one since I made it pretty descriptive. Keep in mind arg represents the message you want to send or the command you want to execute. Using [player] as a placeholder will get the player who clicked the npc when the action is called.
 
 /editNpc [npc-id] [setName] [name]
+
 permission: npcs.commands.edit
+
 Pretty simple, changes the name of the npc.
