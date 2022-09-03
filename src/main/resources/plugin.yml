@@ -1,0 +1,20 @@
+name: Npc
+version: '${project.version}'
+main: me.stephenminer.npc.Npc
+api-version: 1.19
+authors: [ Meep, Stephenminer ]
+description: Npcs
+load: POSTWORLD
+
+commands:
+  deleteNpc:
+    permission: npcs.commands.delete
+  createNpc:
+    permission: npcs.commands.create
+  editNpc:
+    permission: npcs.commands.edit
+  loadSkin:
+    permission: npcs.commands.loadskin
+  setSkin:
+    permission: npcs.commands.setskin
+
