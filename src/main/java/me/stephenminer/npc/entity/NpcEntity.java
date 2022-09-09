@@ -101,7 +101,7 @@ public class NpcEntity {
         connection.send(new ClientboundAddPlayerPacket(npc));
         connection.send(new ClientboundRotateHeadPacket(npc, (byte) (npc.getYHeadRot()*256 / 360)));
         connection.send(new ClientboundSetEntityDataPacket(npc.getId(), npc.getEntityData(), true));
-        Bukkit.getScheduler().scheduleSyncDelayedTask(Npc.getPlugin(Npc.class), () -> connection.send(new ClientboundPlayerInfoPacket(ClientboundPlayerInfoPacket.Action.REMOVE_PLAYER, npc)), 20);
+        Bukkit.getScheduler().scheduleSyncDelayedTask(Npc.getPlugin(Npc.class), () -> connection.send(new ClientboundPlayerInfoPacket(ClientboundPlayerInfoPacket.Action.REMOVE_PLAYER, npc)), 50);
 
 
     }
