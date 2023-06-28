@@ -36,14 +36,11 @@ public class SetSkin implements CommandExecutor, TabCompleter {
         NpcEntity npc = fromId(args[0]);
         if (npc != null){
             if (hasSkin(args[1])){
+                //  List<Player> players = npc.getSpawn().getWorld().getPlayers();
                 npc.setSkinName(args[1]);
                 npc.save();
                 npc.updateSkin();
-                List<Player> players = npc.getSpawn().getWorld().getPlayers();
-                for (Player player : players){
-                    npc.hide(player);
-                    npc.show(player);
-                }
+                npc.reloadNpc();
                 sender.sendMessage(ChatColor.GREEN + "Set the skin for your npc (you may need to relog to see changes)");
                 return true;
             }else sender.sendMessage(ChatColor.RED + "Inputted skin-id is invalid!");

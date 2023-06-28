@@ -14,12 +14,14 @@ import net.minecraft.world.entity.Entity;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v1_19_R1.CraftServer;
-import org.bukkit.craftbukkit.v1_19_R1.CraftWorld;
-import org.bukkit.craftbukkit.v1_19_R1.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_19_R2.CraftServer;
+import org.bukkit.craftbukkit.v1_19_R2.CraftWorld;
+import org.bukkit.craftbukkit.v1_19_R2.entity.CraftPlayer;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -45,7 +47,7 @@ public class NpcEntity {
         MinecraftServer minecraftServer = ((CraftServer) Bukkit.getServer()).getServer();
         ServerLevel world = ((CraftWorld) loc.getWorld()).getHandle();
         GameProfile profile = new GameProfile(UUID.randomUUID(), ChatColor.translateAlternateColorCodes('&',name));
-        npc = new ServerPlayer(minecraftServer, world, profile, null);
+        npc = new ServerPlayer(minecraftServer, world, profile);
         updateSkin();
         npc.setPos(loc.getBlockX() + 0.5, loc.getY(), loc.getBlockZ() + 0.5);
         npc.setYRot(loc.getYaw());
@@ -72,6 +74,7 @@ public class NpcEntity {
         remove();
         NpcLoader loader = new NpcLoader(Npc.getPlugin(Npc.class), id);
         NpcEntity npcEntity = loader.loadNpc();
+
         for (Player player : players){
             npcEntity.show(player);
         }
@@ -79,7 +82,7 @@ public class NpcEntity {
 
     public void hide(Player player){
         ServerPlayerConnection connection = ((CraftPlayer) player).getHandle().connection;
-        connection.send(new ClientboundPlayerInfoPacket(ClientboundPlayerInfoPacket.Action.REMOVE_PLAYER, npc));
+     //   connection.send(new ClientboundPlayerInfoPacket(ClientboundPlayerInfoPacket.Action.REMOVE_PLAYER, npc));
         connection.send(new ClientboundRemoveEntitiesPacket(npc.getId()));
     }
 
@@ -97,20 +100,23 @@ public class NpcEntity {
 
     public void show(Player player){
         ServerPlayerConnection connection = ((CraftPlayer) player).getHandle().connection;
-        connection.send(new ClientboundPlayerInfoPacket(ClientboundPlayerInfoPacket.Action.ADD_PLAYER, npc));
+         connection.send(new ClientboundPlayerInfoUpdatePacket(ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER, npc));
         connection.send(new ClientboundAddPlayerPacket(npc));
         connection.send(new ClientboundRotateHeadPacket(npc, (byte) (npc.getYHeadRot()*256 / 360)));
-        connection.send(new ClientboundSetEntityDataPacket(npc.getId(), npc.getEntityData(), true));
-        Bukkit.getScheduler().scheduleSyncDelayedTask(Npc.getPlugin(Npc.class), () -> connection.send(new ClientboundPlayerInfoPacket(ClientboundPlayerInfoPacket.Action.REMOVE_PLAYER, npc)), 50);
+        connection.send(new ClientboundSetEntityDataPacket(npc.getId(), npc.getEntityData().getNonDefaultValues()));
+       // Bukkit.getScheduler().scheduleSyncDelayedTask(Npc.getPlugin(Npc.class), () -> connection.send(new ClientboundPlayerInfoPacket(ClientboundPlayerInfoPacket.Action.REMOVE_PLAYER, npc)), 50);
 
 
     }
 
     public void remove(){
         List<Player> players = loc.getWorld().getPlayers();
+        List<UUID> uuids = new ArrayList<>();
+        uuids.add(npc.getUUID());
         for (Player player : players){
             ServerPlayerConnection connection = ((CraftPlayer) player).getHandle().connection;
-            connection.send(new ClientboundPlayerInfoPacket(ClientboundPlayerInfoPacket.Action.REMOVE_PLAYER, npc));
+
+            connection.send(new ClientboundPlayerInfoRemovePacket(uuids));
             connection.send(new ClientboundRemoveEntitiesPacket(npc.getId()));
         }
         npc.remove(Entity.RemovalReason.DISCARDED);

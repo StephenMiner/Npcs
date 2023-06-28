@@ -11,9 +11,8 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
-import org.bukkit.craftbukkit.v1_19_R1.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_19_R2.entity.CraftPlayer;
 import org.bukkit.entity.Player;
-import org.checkerframework.checker.units.qual.A;
 
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -30,6 +29,7 @@ public class LoadSkin implements CommandExecutor, TabCompleter {
 
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args){
+
         if (sender instanceof Player player){
             if (!player.hasPermission("npcs.commands.loadskin")){
                 player.sendMessage(ChatColor.RED + "You do not have permission to use this command!");

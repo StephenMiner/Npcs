@@ -49,6 +49,7 @@ public class CreateNpc implements CommandExecutor, TabCompleter {
                 entity.show(p);
             }
             entity.save();
+            player.sendMessage(ChatColor.GREEN + "Created NPC");
         }else sender.sendMessage(ChatColor.RED + "Only players can use this command!");
         return false;
     }
