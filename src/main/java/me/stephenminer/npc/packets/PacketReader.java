@@ -7,17 +7,17 @@ import me.stephenminer.npc.Npc;
 import me.stephenminer.npc.entity.NpcEntity;
 import me.stephenminer.npc.events.Action;
 import me.stephenminer.npc.events.NpcInteractEvent;
+import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ServerboundInteractPacket;
-import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v1_19_R2.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_20_R2.entity.CraftPlayer;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitScheduler;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
@@ -28,7 +28,8 @@ public class PacketReader {
 
     public void inject(Player player){
         CraftPlayer craftPlayer = (CraftPlayer) player;
-        channel = craftPlayer.getHandle().connection.connection.channel;
+        channel = getChannel(craftPlayer.getHandle().connection);
+                //n
         channels.put(player.getUniqueId(), channel);
         if (channel.pipeline().get("PacketInjector") != null) return;
         channel.pipeline().addAfter("decoder", "PacketInjector", new MessageToMessageDecoder<Packet<?>>() {
@@ -38,6 +39,20 @@ public class PacketReader {
                 readPacket(player, packet);
             }
         });
+    }
+
+    private Channel getChannel(ServerGamePacketListenerImpl packetListener){
+        try{
+            Field field = ServerGamePacketListenerImpl.class.getSuperclass().getDeclaredField("c");
+            field.setAccessible(true);
+            Connection connection = (Connection) field.get(packetListener);
+            field.setAccessible(false);
+            return connection.channel;
+        }catch (Exception e){
+            e.printStackTrace();
+            System.out.println("Something wrong happening");
+        }
+        return null;
     }
 
     public void unInject(Player player){

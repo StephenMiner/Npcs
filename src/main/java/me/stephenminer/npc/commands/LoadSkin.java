@@ -11,7 +11,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
-import org.bukkit.craftbukkit.v1_19_R2.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_20_R2.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 
 import java.io.InputStreamReader;
@@ -70,8 +70,8 @@ public class LoadSkin implements CommandExecutor, TabCompleter {
             ServerPlayer p = ((CraftPlayer) player).getHandle();
             GameProfile profile = p.getGameProfile();
             Property property = profile.getProperties().get("textures").iterator().next();
-            String texture = property.getValue();
-            String signature = property.getSignature();
+            String texture = property.value();
+            String signature = property.signature();
             return new String[]{texture, signature};
         }
     }

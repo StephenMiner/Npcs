@@ -3,20 +3,28 @@ package me.stephenminer.npc.entity;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import me.stephenminer.npc.Npc;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.Connection;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.protocol.game.*;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.CommonListenerCookie;
 import net.minecraft.server.network.ServerPlayerConnection;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.HumanoidArm;
+import net.minecraft.world.entity.player.ChatVisiblity;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v1_19_R2.CraftServer;
-import org.bukkit.craftbukkit.v1_19_R2.CraftWorld;
-import org.bukkit.craftbukkit.v1_19_R2.entity.CraftPlayer;
+
+import org.bukkit.craftbukkit.v1_20_R2.CraftServer;
+import org.bukkit.craftbukkit.v1_20_R2.CraftWorld;
+import org.bukkit.craftbukkit.v1_20_R2.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -44,16 +52,21 @@ public class NpcEntity {
     }
 
     public void createEntity(){
+
         MinecraftServer minecraftServer = ((CraftServer) Bukkit.getServer()).getServer();
         ServerLevel world = ((CraftWorld) loc.getWorld()).getHandle();
         GameProfile profile = new GameProfile(UUID.randomUUID(), ChatColor.translateAlternateColorCodes('&',name));
-        npc = new ServerPlayer(minecraftServer, world, profile);
+        ClientInformation info = ClientInformation.createDefault();//new ClientInformation("English",1, ChatVisiblity.HIDDEN, true,1,HumanoidArm.RIGHT,false,false);
+        npc = new ServerPlayer(minecraftServer, world, profile,info);
         updateSkin();
         npc.setPos(loc.getBlockX() + 0.5, loc.getY(), loc.getBlockZ() + 0.5);
         npc.setYRot(loc.getYaw());
         npc.setYHeadRot(loc.getYaw());
+        Connection connection = new FakeConnection(PacketFlow.CLIENTBOUND);
+        npc.connection = new FakePacketListener(minecraftServer,connection,npc,new CommonListenerCookie(profile,0,info));
         onLeftClick = new ActionEvent(npc);
         onRightClick = new ActionEvent(npc);
+        System.out.println(npc.connection);
 
     }
 
@@ -100,8 +113,13 @@ public class NpcEntity {
 
     public void show(Player player){
         ServerPlayerConnection connection = ((CraftPlayer) player).getHandle().connection;
-         connection.send(new ClientboundPlayerInfoUpdatePacket(ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER, npc));
-        connection.send(new ClientboundAddPlayerPacket(npc));
+        if (connection == null){
+            System.out.println("NULL");
+            return;
+        }
+        connection.send(new ClientboundPlayerInfoUpdatePacket(ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER,npc));
+       // connection.send(new ClientboundPlayerInfoUpdatePacket(ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER, npc));
+        connection.send(new ClientboundAddEntityPacket(npc));
         connection.send(new ClientboundRotateHeadPacket(npc, (byte) (npc.getYHeadRot()*256 / 360)));
         connection.send(new ClientboundSetEntityDataPacket(npc.getId(), npc.getEntityData().getNonDefaultValues()));
        // Bukkit.getScheduler().scheduleSyncDelayedTask(Npc.getPlugin(Npc.class), () -> connection.send(new ClientboundPlayerInfoPacket(ClientboundPlayerInfoPacket.Action.REMOVE_PLAYER, npc)), 50);
