@@ -3,6 +3,7 @@ package me.stephenminer.npc.commands;
 import me.stephenminer.npc.Npc;
 import me.stephenminer.npc.entity.ActionEvent;
 import me.stephenminer.npc.entity.NpcEntity;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
