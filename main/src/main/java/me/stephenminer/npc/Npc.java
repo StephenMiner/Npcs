@@ -119,8 +119,14 @@ public final class Npc extends JavaPlugin {
         String ver = Bukkit.getServer().getBukkitVersion();
         ver = ver.substring(0, ver.indexOf("-"));
         try {
-            if (ver.equals("1.21"))
-                return (NpcEntity) Class.forName(packageName + ".v1_21_R1.NpcEntityImpl").getConstructor(Location.class, String.class, String.class).newInstance(loc, id, displayName);
+            switch (ver){
+                case "1.21" ->{
+                    return (NpcEntity) Class.forName(packageName + ".v1_21_R1.NpcEntityImpl").getConstructor(Location.class, String.class, String.class).newInstance(loc, id, displayName);
+                }
+                case "1.21.3" ->{
+                    return (NpcEntity) Class.forName(packageName + ".v1_21_R3.NpcEntityImpl").getConstructor(Location.class, String.class, String.class).newInstance(loc, id, displayName);
+                }
+            }
 
         }catch(Exception e){
             e.printStackTrace();
@@ -143,9 +149,16 @@ public final class Npc extends JavaPlugin {
         PacketReader reader;
         String ver = Bukkit.getServer().getBukkitVersion();
         ver = ver.substring(0, ver.indexOf("-"));
+       // System.out.println(ver);
         try {
-            if (ver.equals("1.21"))
-                return (PacketReader) Class.forName(packageName + ".v1_21_R1.PacketReaderImpl").getConstructor().newInstance();
+            switch (ver){
+                case "1.21" -> {
+                    return (PacketReader) Class.forName(packageName + ".v1_21_R1.PacketReaderImpl").getConstructor().newInstance();
+                }
+                case "1.21.3" -> {
+                    return (PacketReader) Class.forName(packageName + ".v1_21_R3.PacketReaderImpl").getConstructor().newInstance();
+                }
+            }
 
         }catch(Exception e){
             e.printStackTrace();

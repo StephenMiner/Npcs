@@ -2,6 +2,7 @@ package me.stephenminer.npc.entity;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -41,6 +42,7 @@ public class ActionEvent {
 
     public void dispatchCommands(Player player){
         for (String cmd : dispatch){
+            CommandSender sender = player;
             String temp = cmd.replace("[player]", player.getName());
             Bukkit.dispatchCommand(player, temp);
         }

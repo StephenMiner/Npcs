@@ -91,6 +91,8 @@ public interface NpcEntity {
 
     public void teleport(Location target);
 
+    public void setLocation(Location target);
+
 
 
 

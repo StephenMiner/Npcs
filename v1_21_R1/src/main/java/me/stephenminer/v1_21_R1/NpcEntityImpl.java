@@ -214,6 +214,10 @@ public class NpcEntityImpl extends ServerPlayer implements NpcEntity{
         this.loc = target;
     }
 
+    @Override
+    public void setLocation(Location target) {
+
+    }
 
 
     private ItemStack pumpkin(){

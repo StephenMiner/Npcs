@@ -115,14 +115,6 @@ public class NpcEntityImpl extends ServerPlayer implements NpcEntity {
         connection.send(new ClientboundAddEntityPacket(this));
         connection.send(new ClientboundRotateHeadPacket(this, (byte) (this.getYHeadRot()*256 / 360)));
         connection.send(new ClientboundSetEntityDataPacket(this.getId(), this.getEntityData().getNonDefaultValues()));
-        if (plugin.halloween){
-            List<Pair<EquipmentSlot, ItemStack>> equip = new ArrayList<>();
-            equip.add(new Pair<>(EquipmentSlot.HEAD, santahat()));
-            connection.send(new ClientboundSetEquipmentPacket(this.getId(),equip));
-        }
-        // Bukkit.getScheduler().scheduleSyncDelayedTask(Npc.getPlugin(Npc.class), () -> connection.send(new ClientboundPlayerInfoPacket(ClientboundPlayerInfoPacket.Action.REMOVE_PLAYER, npc)), 50);
-
-
     }
 
     public void remove(){
@@ -212,6 +204,10 @@ public class NpcEntityImpl extends ServerPlayer implements NpcEntity {
         this.loc = target;
     }
 
+    @Override
+    public void setLocation(Location target) {
+
+    }
 
 
     private ItemStack pumpkin(){

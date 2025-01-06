@@ -1,4 +1,4 @@
-package me.stephenminer.v1_20_R1;
+package me.stephenminer.v1_21_R3;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
@@ -6,13 +6,16 @@ import com.mojang.datafixers.util.Pair;
 import me.stephenminer.npc.Npc;
 import me.stephenminer.npc.entity.ActionEvent;
 import me.stephenminer.npc.entity.NpcEntity;
-import me.stephenminer.npc.entity.NpcLoader;
+import net.minecraft.network.Connection;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.protocol.game.*;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.CommonListenerCookie;
 import net.minecraft.server.network.ServerPlayerConnection;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -21,10 +24,10 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.craftbukkit.v1_20_R1.CraftServer;
-import org.bukkit.craftbukkit.v1_20_R1.CraftWorld;
-import org.bukkit.craftbukkit.v1_20_R1.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v1_20_R1.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_21_R2.CraftServer;
+import org.bukkit.craftbukkit.v1_21_R2.CraftWorld;
+import org.bukkit.craftbukkit.v1_21_R2.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_21_R2.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -45,7 +48,10 @@ public class NpcEntityImpl extends ServerPlayer implements NpcEntity{
     private String skinName;
 
     public NpcEntityImpl(Location loc, String id, String name){
-        super(((CraftServer) Bukkit.getServer()).getServer(), ((CraftWorld)loc.getWorld()).getHandle(), new GameProfile(UUID.randomUUID(),ChatColor.translateAlternateColorCodes('&',name)));
+        super(((CraftServer) Bukkit.getServer()).getServer(), ((CraftWorld)loc.getWorld()).getHandle(), new GameProfile(UUID.randomUUID(), ChatColor.translateAlternateColorCodes('&',name))
+                , ClientInformation.createDefault());
+        Connection connection = new FakeConnection(PacketFlow.CLIENTBOUND);
+        this.connection = new FakePacketListener(getServer(),connection,this,new CommonListenerCookie(getGameProfile(),0, clientInformation(),false));
         this.plugin = JavaPlugin.getPlugin(Npc.class);
         this.loc = loc;
         this.name = name;
@@ -63,17 +69,17 @@ public class NpcEntityImpl extends ServerPlayer implements NpcEntity{
         MinecraftServer minecraftServer = ((CraftServer) Bukkit.getServer()).getServer();
         ServerLevel world = ((CraftWorld) loc.getWorld()).getHandle();
         GameProfile profile = new GameProfile(UUID.randomUUID(), ChatColor.translateAlternateColorCodes('&',name));
-       // ClientInformation info = ClientInformation.createDefault();//new ClientInformation("English",1, ChatVisiblity.HIDDEN, true,1,HumanoidArm.RIGHT,false,false);
-       // npc = new ServerPlayer(minecraftServer, world, profile);
+        ClientInformation info = ClientInformation.createDefault();//new ClientInformation("English",1, ChatVisiblity.HIDDEN, true,1,HumanoidArm.RIGHT,false,false);
+        //    npc = new ServerPlayer(minecraftServer, world, profile,info);
         updateSkin();
-      //  npc.setPos(loc.getBlockX() + 0.5, loc.getY(), loc.getBlockZ() + 0.5);
-     //   npc.setYRot(loc.getYaw());
-      //  npc.setYHeadRot(loc.getYaw());
-       // Connection connection = new FakeConnection(PacketFlow.CLIENTBOUND);
-       // npc.connection = new FakePacketListener(minecraftServer,connection,npc);
+        //    npc.setPos(loc.getBlockX() + 0.5, loc.getY(), loc.getBlockZ() + 0.5);
+        //   npc.setYRot(loc.getYaw());
+        //   npc.setYHeadRot(loc.getYaw());
+        Connection connection = new FakeConnection(PacketFlow.CLIENTBOUND);
+//npc.connection = new FakePacketListener(minecraftServer,connection,npc,new CommonListenerCookie(profile,0,info));
         onLeftClick = new ActionEvent(this);
         onRightClick = new ActionEvent(this);
-       // System.out.println(npc.connection);
+        //  System.out.println(npc.connection);
 
     }
 
@@ -91,7 +97,6 @@ public class NpcEntityImpl extends ServerPlayer implements NpcEntity{
     }
 
 
-
     public void hide(Player player){
         ServerPlayerConnection connection = ((CraftPlayer) player).getHandle().connection;
         //   connection.send(new ClientboundPlayerInfoPacket(ClientboundPlayerInfoPacket.Action.REMOVE_PLAYER, npc));
@@ -107,17 +112,20 @@ public class NpcEntityImpl extends ServerPlayer implements NpcEntity{
             return;
         }
         connection.send(new ClientboundPlayerInfoUpdatePacket(ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER,this));
-     //    connection.send(new ClientboundPlayerInfoUpdatePacket(ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER, npc));
-        connection.send(new ClientboundAddPlayerPacket(this));
+        // connection.send(new ClientboundPlayerInfoUpdatePacket(ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER, npc));
+        //connection.send(new ClientboundAddEntityPacket(this));
+        connection.send(new ClientboundAddEntityPacket(this,this.getId(), this.blockPosition()));
         connection.send(new ClientboundRotateHeadPacket(this, (byte) (this.getYHeadRot()*256 / 360)));
         connection.send(new ClientboundSetEntityDataPacket(this.getId(), this.getEntityData().getNonDefaultValues()));
+        /*
         if (plugin.halloween){
             List<Pair<EquipmentSlot, ItemStack>> equip = new ArrayList<>();
-          //  equip.add(new Pair<>(EquipmentSlot.HEAD, santahat()));
+            equip.add(new Pair<>(EquipmentSlot.HEAD, santahat()));
             connection.send(new ClientboundSetEquipmentPacket(this.getId(),equip));
         }
-        ServerPlayer npc = this;
-         Bukkit.getScheduler().scheduleSyncDelayedTask(Npc.getPlugin(Npc.class), () -> connection.send(new ClientboundPlayerInfoRemovePacket(List.of(npc.getUUID()))), 50);
+
+         */
+        // Bukkit.getScheduler().scheduleSyncDelayedTask(Npc.getPlugin(Npc.class), () -> connection.send(new ClientboundPlayerInfoPacket(ClientboundPlayerInfoPacket.Action.REMOVE_PLAYER, npc)), 50);
 
 
     }
@@ -162,14 +170,15 @@ public class NpcEntityImpl extends ServerPlayer implements NpcEntity{
     public Location getSpawn() {
         return loc;
     }
-    public String name(){
+
+    public String name() {
         return name;
     }
+
     public String id(){
         return id;
     }
-
-    public int npcId(){ return this.getId();}
+    public int npcId(){ return this.getId(); }
 
     public ActionEvent getOnRightClick(){
         return onRightClick;
@@ -182,16 +191,6 @@ public class NpcEntityImpl extends ServerPlayer implements NpcEntity{
     }
     public void setOnLeftClick(ActionEvent event){
         onLeftClick = event;
-    }
-    public void teleport(Location target){
-        this.setPos(target.getX(), target.getY(), target.getZ());
-        this.setYRot(target.getYaw());
-        this.setYHeadRot(target.getYaw());
-    }
-
-    public void setLocation(Location target){
-        this.loc = target;
-        teleport(target);
     }
 
     public void doOnLeftClick(Player player){
@@ -211,6 +210,17 @@ public class NpcEntityImpl extends ServerPlayer implements NpcEntity{
         this.skinName = name;
     }
 
+    public void teleport(Location target){
+        this.setPos(target.getX(), target.getY(), target.getZ());
+        this.setYRot(target.getYaw());
+        this.setYHeadRot(target.getYaw());
+        this.loc = target;
+    }
+
+    @Override
+    public void setLocation(Location target) {
+
+    }
 
 
     private ItemStack pumpkin(){

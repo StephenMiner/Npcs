@@ -185,7 +185,7 @@ public class EditNpc implements CommandExecutor, TabCompleter {
         triggers.add("onLeftClick");
         triggers.add("onRightClick");
         triggers.add("setName");
-        triggers.add("teleport");
+        triggers.add("setPosition");
         return filter(triggers, match);
     }
 
