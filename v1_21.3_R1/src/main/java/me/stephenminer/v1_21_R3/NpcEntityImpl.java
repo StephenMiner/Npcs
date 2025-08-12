@@ -59,26 +59,25 @@ public class NpcEntityImpl extends ServerPlayer implements NpcEntity{
         this.setPos(loc.getBlockX() + 0.5, loc.getY(), loc.getBlockZ() + 0.5);
         this.setYRot(loc.getYaw());
         this.setYHeadRot(loc.getYaw());
-        NpcEntity.npcs.add(this);
-        onLeftClick = new ActionEvent(this);
-        onRightClick = new ActionEvent(this);
     }
 
     public void createEntity(){
 
-        MinecraftServer minecraftServer = ((CraftServer) Bukkit.getServer()).getServer();
-        ServerLevel world = ((CraftWorld) loc.getWorld()).getHandle();
-        GameProfile profile = new GameProfile(UUID.randomUUID(), ChatColor.translateAlternateColorCodes('&',name));
-        ClientInformation info = ClientInformation.createDefault();//new ClientInformation("English",1, ChatVisiblity.HIDDEN, true,1,HumanoidArm.RIGHT,false,false);
+      //  MinecraftServer minecraftServer = ((CraftServer) Bukkit.getServer()).getServer();
+        //  ServerLevel world = ((CraftWorld) loc.getWorld()).getHandle();
+      //  GameProfile profile = new GameProfile(UUID.randomUUID(), ChatColor.translateAlternateColorCodes('&',name));
+      //  ClientInformation info = ClientInformation.createDefault();//new ClientInformation("English",1, ChatVisiblity.HIDDEN, true,1,HumanoidArm.RIGHT,false,false);
         //    npc = new ServerPlayer(minecraftServer, world, profile,info);
         updateSkin();
         //    npc.setPos(loc.getBlockX() + 0.5, loc.getY(), loc.getBlockZ() + 0.5);
         //   npc.setYRot(loc.getYaw());
         //   npc.setYHeadRot(loc.getYaw());
-        Connection connection = new FakeConnection(PacketFlow.CLIENTBOUND);
-//npc.connection = new FakePacketListener(minecraftServer,connection,npc,new CommonListenerCookie(profile,0,info));
+     //   Connection connection = new FakeConnection(PacketFlow.CLIENTBOUND);
+       // this.connection = new FakePacketListener(minecraftServer,connection,npc,new CommonListenerCookie(profile,0,info));
         onLeftClick = new ActionEvent(this);
         onRightClick = new ActionEvent(this);
+        NpcEntity.npcs.add(this);
+      //  world.addNewPlayer(this);
         //  System.out.println(npc.connection);
 
     }
@@ -115,7 +114,7 @@ public class NpcEntityImpl extends ServerPlayer implements NpcEntity{
         // connection.send(new ClientboundPlayerInfoUpdatePacket(ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER, npc));
         //connection.send(new ClientboundAddEntityPacket(this));
         connection.send(new ClientboundAddEntityPacket(this,this.getId(), this.blockPosition()));
-        connection.send(new ClientboundRotateHeadPacket(this, (byte) (this.getYHeadRot()*256 / 360)));
+       // connection.send(new ClientboundRotateHeadPacket(this, (byte) (this.getYHeadRot()*256 / 360)));
         connection.send(new ClientboundSetEntityDataPacket(this.getId(), this.getEntityData().getNonDefaultValues()));
         /*
         if (plugin.halloween){

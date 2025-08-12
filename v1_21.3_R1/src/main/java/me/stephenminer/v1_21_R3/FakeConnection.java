@@ -21,14 +21,29 @@ public class FakeConnection extends Connection {
     }
 
     @Override
-    public boolean isConnected(){ return true; }
-    @Override
-    public void send(Packet<?> packet, PacketSendListener genericfuturelistener) {
+    public void flushChannel() {
     }
 
-/*
     @Override
-    public void setListener(PacketListener pl) {
+    public boolean isConnected() {
+        return true;
+    }
+
+    @Override
+    public void send(Packet packet) {
+    }
+
+    @Override
+    public void send(Packet packet, PacketSendListener genericfuturelistener) {
+    }
+
+    @Override
+    public void send(Packet packet, PacketSendListener genericfuturelistener, boolean flag) {
+    }
+
+
+    @Override
+    public void setListenerForServerboundHandshake(PacketListener pl) {
         //q
         try {
             MethodHandles.lookup().unreflectSetter(getField(Connection.class,"q")).invoke(this, pl);
@@ -38,7 +53,7 @@ public class FakeConnection extends Connection {
         }
     }
 
- */
+
 
     public Field getField(Class<?> clazz, String name){
         Field field = null;

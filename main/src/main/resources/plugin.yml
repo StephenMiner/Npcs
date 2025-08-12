@@ -19,4 +19,7 @@ commands:
     permission: npcs.commands.setskin
   holidayNpc:
     permission: npc.commands.halloween
+  spawnPhysical:
+  createphysical:
+  editphysical:
 

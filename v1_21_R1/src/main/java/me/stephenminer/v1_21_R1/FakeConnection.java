@@ -15,7 +15,7 @@ public class FakeConnection extends Connection {
         super(enumprotocoldirection);
         channel = new FakeChannel(null);
         address = new SocketAddress() {
-         //   @java.io.Serial
+            @java.io.Serial
             private static final long serialVersionUID = 8207338859896320185L;
         };
     }
@@ -26,9 +26,11 @@ public class FakeConnection extends Connection {
     public void send(Packet<?> packet, PacketSendListener genericfuturelistener) {
     }
 
-/*
+
+
+
     @Override
-    public void setListener(PacketListener pl) {
+    public void setListenerForServerboundHandshake(PacketListener pl) {
         //q
         try {
             MethodHandles.lookup().unreflectSetter(getField(Connection.class,"q")).invoke(this, pl);
@@ -38,7 +40,7 @@ public class FakeConnection extends Connection {
         }
     }
 
- */
+
 
     public Field getField(Class<?> clazz, String name){
         Field field = null;

@@ -15,4 +15,9 @@ public class FakePacketListener extends ServerGamePacketListenerImpl {
     @Override
     public void send(Packet<?> packet) {
     }
+
+    @Override
+    public void resumeFlushing(){
+
+    }
 }

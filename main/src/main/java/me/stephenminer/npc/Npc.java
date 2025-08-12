@@ -3,6 +3,7 @@ package me.stephenminer.npc;
 import me.stephenminer.npc.commands.*;
 import me.stephenminer.npc.entity.NpcEntity;
 import me.stephenminer.npc.entity.NpcLoader;
+import me.stephenminer.npc.entity.PhysicalNpc;
 import me.stephenminer.npc.events.Joining;
 import me.stephenminer.npc.events.NpcListeners;
 import me.stephenminer.npc.packets.PacketReader;
@@ -10,9 +11,9 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.WorldCreator;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.checkerframework.checker.units.qual.C;
 
 import java.util.Set;
 
@@ -20,6 +21,7 @@ public final class Npc extends JavaPlugin {
 
     public NpcFile npcFile;
     public NpcFile skinFile;
+    public NpcFile physTypesFile;
     public boolean halloween = true;
     @Override
     public void onEnable() {
@@ -27,10 +29,28 @@ public final class Npc extends JavaPlugin {
         registerEvents();
         npcFile = new NpcFile(this, "npcs");
         skinFile = new NpcFile(this, "skins");
+        this.physTypesFile = new NpcFile(this, "physical-npcs");
         loadNpcs();
+        //tickNpcs();
         // Plugin startup logic
 
     }
+
+    /*
+    public void tickNpcs(){
+        Bukkit.getScheduler().runTaskTimer(this,()->{
+            for (NpcEntity npc : NpcEntity.npcs){
+                if (npc instanceof PhysicalNpc physicalNpc && !physicalNpc.isDead()) {
+                    physicalNpc.tick();
+                    int[] pos = physicalNpc.pos();
+                    System.out.println(pos[0] + "," + pos[1] + "," + pos[2]);
+                }
+            }
+        },1,1);
+
+    }
+
+     */
 
     @Override
     public void onDisable() {
@@ -60,6 +80,18 @@ public final class Npc extends JavaPlugin {
         getCommand("setSkin").setTabCompleter(setSkin);
 
         getCommand("holidayNpc").setExecutor(new ToggleHalloween(this));
+
+        getCommand("spawnPhysical").setExecutor(new SpawnPhysical());
+
+        CreatePhysicalType createPhysicalType = new CreatePhysicalType();
+        getCommand("createphysical").setExecutor(createPhysicalType);
+        getCommand("createphysical").setTabCompleter(createPhysicalType);
+
+        EditNpcType editNpcType = new EditNpcType();
+        getCommand("editphysical").setExecutor(editNpcType);
+        getCommand("editphysical").setTabCompleter(editNpcType);
+
+
     }
 
     private void registerEvents(){
@@ -113,6 +145,7 @@ public final class Npc extends JavaPlugin {
      * Gets an NpcEntity object using the correct NMS implementation
      * @return
      */
+
     public NpcEntity npcImpl(Location loc, String id, String displayName){
         NpcEntity npc;
         String packageName = "me.stephenminer";
@@ -137,6 +170,22 @@ public final class Npc extends JavaPlugin {
             npc = (NpcEntity) Class.forName(packageName +"." +  name + ".NpcEntityImpl").getConstructor(Location.class, String.class, String.class).newInstance(loc, id, displayName);
             return npc;
         }catch (Exception e){ e.printStackTrace();}
+        return null;
+    }
+
+    public PhysicalNpc physicalImpl(Location loc, String id, String displayName){
+        NpcEntity npc;
+        String packageName = "me.stephenminer";
+        String ver = Bukkit.getServer().getBukkitVersion();
+        ver = ver.substring(0, ver.indexOf('-'));
+        try{
+            switch (ver){
+                case "1.21.3" -> { return (PhysicalNpc) Class.forName(packageName +  ".v1_21_R3.PhysicalNpcImpl").getConstructor(Location.class
+                , String.class, String.class).newInstance(loc,id,displayName); }
+            }
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
         return null;
     }
 
@@ -169,5 +218,21 @@ public final class Npc extends JavaPlugin {
             return reader;
         }catch (Exception e){ e.printStackTrace();}
         return null;
+    }
+
+
+    public PhysicalNpc loadPhysByType(Location position, String typeId, String name){
+        if (!this.physTypesFile.getConfig().contains(typeId)) return null;
+        String skinId = this.physTypesFile.getConfig().getString(typeId + ".skin");
+        int maxHp = this.physTypesFile.getConfig().getInt(typeId + ".max-health");
+        PhysicalNpc npc = this.physicalImpl(position, typeId, name);
+        if (npc == null){
+            System.err.println("Something went wrong loading the PhysicalNpc object for " + typeId + ". Maybe server version is invalid?");
+            return null;
+        }
+        npc.setSkinName(skinId);
+        npc.setMaxHealth(maxHp);
+        npc.setHealth(maxHp);
+        return npc;
     }
 }
