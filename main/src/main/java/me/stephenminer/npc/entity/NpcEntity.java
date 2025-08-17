@@ -8,6 +8,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public interface NpcEntity {
     public static List<NpcEntity> npcs = new ArrayList<>();
@@ -92,6 +93,8 @@ public interface NpcEntity {
     public void teleport(Location target);
 
     public void setLocation(Location target);
+
+    public Player bukkit();
 
 
 

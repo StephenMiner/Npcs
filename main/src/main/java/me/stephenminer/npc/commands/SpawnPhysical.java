@@ -3,6 +3,7 @@ package me.stephenminer.npc.commands;
 import me.stephenminer.npc.Npc;
 import me.stephenminer.npc.entity.NpcEntity;
 import me.stephenminer.npc.entity.PhysicalNpc;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.World;
 import org.bukkit.command.Command;
@@ -52,7 +53,15 @@ public class SpawnPhysical implements CommandExecutor {
 
             for (Player p : world.getPlayers()){
                 entity.show(p);
+                Bukkit.broadcastMessage(p.getName());
+
             }
+            Bukkit.broadcastMessage("=======");
+            Bukkit.getScheduler().runTaskLater(plugin,()->{
+                for (Player p : Bukkit.getOnlinePlayers()){
+                    Bukkit.broadcastMessage(p.getName());
+                }
+            }, 20);
            // entity.save();
 
             player.sendMessage(ChatColor.GREEN + "Created NPC");

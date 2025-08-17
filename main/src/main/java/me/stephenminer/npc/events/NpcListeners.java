@@ -2,11 +2,20 @@ package me.stephenminer.npc.events;
 
 import me.stephenminer.npc.Npc;
 import me.stephenminer.npc.entity.NpcEntity;
+import me.stephenminer.npc.entity.PhysicalNpc;
 import org.bukkit.Bukkit;
+import org.bukkit.NamespacedKey;
+import org.bukkit.World;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.ArrayList;
@@ -58,4 +67,35 @@ public class NpcListeners implements Listener {
 
         }.runTaskTimer(plugin, 0, 1);
     }
+
+
+    @EventHandler
+    public void commandNpc(PlayerInteractEvent event){
+        if (!event.hasItem()) return;
+        ItemStack item = event.getItem();
+        if (!plugin.hasID(item, "wand-of-command")) return;
+        NamespacedKey holder = new NamespacedKey(plugin, "holder");
+        ItemMeta meta = item.getItemMeta();
+        PersistentDataContainer container = meta.getPersistentDataContainer();
+        if (!container.has(holder, PersistentDataType.STRING)) return;
+        UUID tag = UUID.fromString(container.get(holder, PersistentDataType.STRING));
+        Player player = event.getPlayer();
+        World world = event.getPlayer().getWorld();
+        for (Entity entity : world.getEntities()){
+            if (!hasTag(entity, tag) || !plugin.taggedNpcs.containsKey(tag)) continue;
+            PhysicalNpc npc = plugin.taggedNpcs.get(tag);
+            npc.move(player.getLocation());
+            break;
+        }
+    }
+
+
+    private boolean hasTag(Entity entity, UUID tag){
+        NamespacedKey key = new NamespacedKey(plugin, "command-id");
+        PersistentDataContainer container = entity.getPersistentDataContainer();
+        if (!container.has(key, PersistentDataType.STRING)) return false;
+        UUID extracted = UUID.fromString(container.get(key, PersistentDataType.STRING));
+        return tag.equals(extracted);
+    }
+
 }

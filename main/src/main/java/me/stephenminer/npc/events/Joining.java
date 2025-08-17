@@ -9,6 +9,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityShootBowEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -37,6 +38,11 @@ public class Joining implements Listener {
         }
         PacketReader reader = plugin.packetReaderImpl();
         reader.unInject(player);
+    }
+
+    @EventHandler
+    public void onDeath(PlayerDeathEvent event){
+        Bukkit.broadcastMessage(event.getEntity().getName());
     }
 
     @EventHandler

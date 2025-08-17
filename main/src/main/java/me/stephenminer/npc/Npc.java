@@ -7,24 +7,30 @@ import me.stephenminer.npc.entity.PhysicalNpc;
 import me.stephenminer.npc.events.Joining;
 import me.stephenminer.npc.events.NpcListeners;
 import me.stephenminer.npc.packets.PacketReader;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.World;
-import org.bukkit.WorldCreator;
+import org.bukkit.*;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.checkerframework.checker.units.qual.C;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 public final class Npc extends JavaPlugin {
-
+    public NamespacedKey idKey;
     public NpcFile npcFile;
     public NpcFile skinFile;
     public NpcFile physTypesFile;
     public boolean halloween = true;
+
+    public Map<UUID, PhysicalNpc> taggedNpcs;
     @Override
     public void onEnable() {
+        this.taggedNpcs = new HashMap<>();
+        this.idKey = new NamespacedKey(this, "npcid");
         registerCommands();
         registerEvents();
         npcFile = new NpcFile(this, "npcs");
@@ -90,6 +96,9 @@ public final class Npc extends JavaPlugin {
         EditNpcType editNpcType = new EditNpcType();
         getCommand("editphysical").setExecutor(editNpcType);
         getCommand("editphysical").setTabCompleter(editNpcType);
+
+        SpawnCommandableNpc spawnCommandableNpc = new SpawnCommandableNpc();
+        getCommand("spawncommand").setExecutor(spawnCommandableNpc);
 
 
     }
@@ -234,5 +243,13 @@ public final class Npc extends JavaPlugin {
         npc.setMaxHealth(maxHp);
         npc.setHealth(maxHp);
         return npc;
+    }
+
+
+    public boolean hasID(ItemStack item, String id){
+        if (item == null || !item.hasItemMeta()) return false;
+        PersistentDataContainer container = item.getItemMeta().getPersistentDataContainer();
+        if (!container.has(idKey,PersistentDataType.STRING)) return false;
+        return container.get(idKey, PersistentDataType.STRING).equals(id);
     }
 }

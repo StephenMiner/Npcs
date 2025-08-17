@@ -22,4 +22,5 @@ commands:
   spawnPhysical:
   createphysical:
   editphysical:
+  spawncommand:
 

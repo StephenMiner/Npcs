@@ -1,12 +1,14 @@
 package me.stephenminer.v1_21_R3;
 
 import me.stephenminer.npc.entity.PhysicalNpc;
+import me.stephenminer.v1_21_R3.pathfinder.Navigation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.phys.Vec3;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.craftbukkit.v1_21_R2.CraftWorld;
@@ -15,20 +17,24 @@ import org.bukkit.craftbukkit.v1_21_R2.event.CraftEventFactory;
 import org.bukkit.event.entity.EntityKnockbackEvent;
 
 public class PhysicalNpcImpl extends NpcEntityImpl implements PhysicalNpc {
+    private final Navigation navigation;
+
     public PhysicalNpcImpl(Location loc, String id, String name) {
         super(loc, id, name);
+        this.navigation = new Navigation(this, this.level());
         //this.level().addFreshEntity(this);
         //System.out.println(92439545);
     }
 
     @Override
-    public void move() {
-
+    public void spawn(World world){
+        ((CraftWorld) world).getHandle().addNewPlayer(this);
     }
 
     @Override
-    public void spawn(World world){
-        ((CraftWorld) world).getHandle().addNewPlayer(this);
+    public void move(Location loc) {
+        this.setJumping(true);
+       // this.moveTowardsClosestSpace(loc.getX(), loc.getY(), loc.getZ());
     }
 
     @Override
@@ -102,7 +108,9 @@ public class PhysicalNpcImpl extends NpcEntityImpl implements PhysicalNpc {
             System.out.println(2);
         }
         System.out.println(1);
+
     }
+
 
     @Override
     public void knockback(double d0, double d1, double d2){

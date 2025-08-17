@@ -194,6 +194,11 @@ public class NpcEntityImpl extends ServerPlayer implements NpcEntity{
         teleport(target);
     }
 
+    @Override
+    public Player bukkit() {
+        return this.getBukkitEntity().getPlayer();
+    }
+
     public void doOnLeftClick(Player player){
         onLeftClick.dispatchCommands(player);
         onLeftClick.sendMessages(player);

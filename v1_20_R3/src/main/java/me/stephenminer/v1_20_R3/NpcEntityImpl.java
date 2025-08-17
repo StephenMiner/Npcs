@@ -209,6 +209,11 @@ public class NpcEntityImpl extends ServerPlayer implements NpcEntity {
 
     }
 
+    @Override
+    public Player bukkit() {
+        return this.getBukkitEntity().getPlayer();
+    }
+
 
     private ItemStack pumpkin(){
         return CraftItemStack.asNMSCopy(new org.bukkit.inventory.ItemStack(Material.CARVED_PUMPKIN));

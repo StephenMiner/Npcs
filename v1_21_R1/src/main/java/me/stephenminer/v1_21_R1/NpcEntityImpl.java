@@ -249,4 +249,9 @@ public class NpcEntityImpl extends ServerPlayer implements NpcEntity{
         item.setItemMeta(meta);
         return item;
     }
+
+    @Override
+    public Player bukkit(){
+        return this.getBukkitEntity().getPlayer();
+    }
 }
