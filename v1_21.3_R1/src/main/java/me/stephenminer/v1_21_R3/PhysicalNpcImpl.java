@@ -33,7 +33,7 @@ public class PhysicalNpcImpl extends NpcEntityImpl implements PhysicalNpc {
 
     @Override
     public void move(Location loc) {
-        this.setJumping(true);
+        this.navigation.moveTo(loc.getX(),loc.getBlockY(),loc.getZ(),10,5);
        // this.moveTowardsClosestSpace(loc.getX(), loc.getY(), loc.getZ());
     }
 
@@ -73,8 +73,18 @@ public class PhysicalNpcImpl extends NpcEntityImpl implements PhysicalNpc {
             }
         }
         super.tick();
-        this.aiStep();
 
+        this.aiStep();
+    }
+
+    /**
+     * Method taken from the Mob class from Mojang
+     * @param speed
+     */
+    @Override
+    public void setSpeed(float speed){
+        super.setSpeed(speed);
+        this.zza = speed;
     }
 
 
@@ -87,6 +97,14 @@ public class PhysicalNpcImpl extends NpcEntityImpl implements PhysicalNpc {
         return new int[]{ this.getBlockX(), this.getBlockY(), this.getBlockZ() };
     }
 
+
+    @Override
+    public void serverAiStep(){
+        super.serverAiStep();
+        this.navigation.tick();
+        this.navigation.moveControl().tick();
+       // System.out.println("TICKING AI STEP");
+    }
 
 
     @Override

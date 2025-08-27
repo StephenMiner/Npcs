@@ -16,6 +16,7 @@ public class NpcMoveControl {
     protected double wantedX, wantedY, wantedZ, speedMod;
     protected float strafeForward, strafeRight;
     protected Operation operation;
+    protected boolean jump;
 
     public NpcMoveControl(ServerPlayer npc){
         this.npc = npc;
@@ -75,9 +76,20 @@ public class NpcMoveControl {
             if ((dy > (double) this.npc.maxUpStep() && flatManhattan < (double) Math.max(1.0f, this.npc.getBbWidth()))
                     || (!collision.isEmpty() && this.npc.getY() < collision.max(Direction.Axis.Y) + pos.getY() && !state.is(BlockTags.FENCES))){
                 //this.npc.moveCo
+                this.jump = true;
+                this.operation = Operation.JUMPING;
             }
-
+        }else if (this.operation == Operation.JUMPING){
+            this.npc.setSpeed((float) (this.speedMod * this.npc.getAttributeValue(Attributes.MOVEMENT_SPEED)));
+            if (this.npc.onGround())
+                this.operation = Operation.WAIT;
+        }else{
+            this.npc.zza = 0.0f;
         }
+
+
+        this.npc.setJumping(this.jump);
+        this.jump = false;
     }
 
     public boolean hasWanted(){ return operation == Operation.MOVE_TO; }

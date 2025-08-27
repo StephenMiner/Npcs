@@ -3,13 +3,14 @@ package me.stephenminer.v1_21_R3.pathfinder;
 import me.stephenminer.npc.util.Node;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.*;
 
 public class PathFinder {
+    public static int MAX_DIST_SQR = 32*32;
+
     private final int maxDrop;
     private final int maxStep;
 
@@ -48,25 +49,55 @@ public class PathFinder {
 
         NodeHeap openSet = new NodeHeap(512);
 
-        me.stephenminer.npc.util.Node startNode = new Node(start.getX(), start.getY(), start.getZ());
+        Node startNode = new Node(start.getX(), start.getY(), start.getZ());
+        startNode.actualCost = 0;
         startNode.estCost = heuristic(start, target);
         openSet.push(startNode);
         nodeMap.put(start.asLong(),startNode);
 
         boolean[] walkableCache = new boolean[maxSize];
         boolean[] walkableSet = new boolean[maxSize];
+        boolean reached = false;
 
         Node goal = null;
-
+        Node best =  startNode;
+        double dist = best.distSqr(target.getX(), target.getY(), target.getZ());
+        final int maxNodes = 2000;
+        int nodes = 0;
         while (!openSet.isEmpty()){
+
             Node current = openSet.pop();
+        //    System.out.println(nodes);
+         //   System.out.println(current.x + "," + current.y + "," + current.z + "," + current.closed + "," + current.totalCost());
             if (current.closed) continue;
             current.closed = true;
-
+            System.out.println(nodes);
+            double newDist = current.distSqr(target.getX(), target.getY(), target.getZ());
+            if (newDist < dist) {
+                best = current;
+                dist = newDist;
+            }
             if (onTarget(current, target)){
                 goal = current;
+                System.out.println(target);
+                reached = true;
                 break;
             }
+
+            if (current.distSqr(start.getX(), start.getY(), start.getZ()) > MAX_DIST_SQR) {
+                System.out.println("Incomplete path generated");
+                goal = best;
+                break;
+            }
+            if (++nodes > maxNodes){
+                System.out.println("Incomplete path generated");
+                goal = best;
+                break;
+            }
+
+
+            if (openSet.size() > maxSize)
+                break;
 
             //Need to switch to Node array?
             if (!dense && nodeMap.size() > densityThresh * maxSize){
@@ -84,19 +115,29 @@ public class PathFinder {
                     int y = current.y + dy;
                     long posLong = BlockPos.asLong(x,y,z);
                     Node neighbor = dense ? grid.get(x, y, z) : nodeMap.get(posLong);
-                    if (!isWalkable(world, x, y, z, walkableSet, walkableCache, dense, grid)) continue;
-                    if (neighbor == null) neighbor = new Node(x, y, z);
+                    if (!isWalkable(world, x, y, z, maxX, maxY, maxZ, minX, minY, minZ, walkableSet, walkableCache, dense, grid)) continue;
+                    if (neighbor == null) {
+                        neighbor = new Node(x, y, z);
+                        if (neighbor.posEquals(current.parent)) continue;
+                        if (dense) grid.add(neighbor);
+                        else nodeMap.put(posLong, neighbor);
+                    }
+                    if (neighbor.posEquals(current.parent)) continue;
+
+                    if (neighbor.closed) continue;
 
                     double cost = current.actualCost + 1;
                     if (cost < neighbor.actualCost) {
                         neighbor.actualCost = cost;
                         neighbor.estCost = heuristic(x, y, z, target);
                         neighbor.parent = current;
+                        if (neighbor.posEquals(current.parent)) continue;
                         openSet.push(neighbor);
-                        if (!dense) nodeMap.put(posLong, neighbor);
-                        else grid.add(neighbor);
+                        //if (!dense) nodeMap.put(posLong, neighbor);
+                        //else grid.add(neighbor);
+                       // break; //only take first valid position in loop
                     }
-                    break; //only take first valid position in loop
+
                 }
             }
         }
@@ -105,7 +146,7 @@ public class PathFinder {
             return new Path(Collections.emptyList(), target, false);
         }
         List<Node> nodeList = reconstructPath(goal);
-        return new Path(nodeList, target, true);
+        return new Path(nodeList, target, reached);
     }
 
 
@@ -127,8 +168,10 @@ public class PathFinder {
         return map.get(BlockPos.asLong(x,y,z));
     }
 
-    private boolean isWalkable(Level level, int x, int y, int z, boolean[] set, boolean[] cache, boolean dense, NodeGrid grid){
+    private boolean isWalkable(Level level, int x, int y, int z, int maxX, int maxY, int maxZ, int minX, int minY, int minZ, boolean[] set, boolean[] cache, boolean dense, NodeGrid grid){
+        if (outBounds(x,y,z,minX,minY,minZ, maxX, maxY, maxZ)) return false;
         int index = dense ? grid.index(x,y,z) : 0;
+        if (index < 0) return false;
         if (dense && set[index]) return cache[index];
         BlockPos pos = new BlockPos(x,y,z);
         BlockState foot = level.getBlockState(pos);
@@ -154,6 +197,10 @@ public class PathFinder {
         return path;
     }
 
+
+    private boolean outBounds(int x, int y, int z, int minX, int minY, int minZ, int maxX, int maxY, int maxZ){
+        return x < minX || y < minY || z < minZ || x >= maxX || y >= maxY || z >= maxZ;
+    }
 
 
 
@@ -306,10 +353,14 @@ public class PathFinder {
         }
 
         public int index(int x, int y, int z){
+            if (x < minX || y < minY || z < minZ || x >= x + sizeX || y >= y + sizeY || z >= y + sizeZ)
+                return -1;
             return (x - minX) + ((z - minZ) * sizeX) + ((y - minY) * sizeX * sizeZ);
         }
 
         public Node get(int x, int y, int z){
+            int index = index(x,y,z);
+            if (index < 0) return null;
             return grid[index(x,y,z)];
         }
 

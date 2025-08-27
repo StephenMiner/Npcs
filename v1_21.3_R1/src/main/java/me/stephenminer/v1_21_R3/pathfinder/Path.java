@@ -94,4 +94,25 @@ public class Path {
         return this.nextNodeIndex > 0 ? this.nodes.get(this.nextNodeIndex - 1) : null;
     }
 
+    public boolean sameAs(Path path) {
+        if (path == null) {
+            return false;
+        } else if (path.nodes.size() != this.nodes.size()) {
+            return false;
+        } else {
+            for(int i = 0; i < this.nodes.size(); i++) {
+                Node node = this.nodes.get(i);
+                Node otherNode = path.nodes.get(i);
+                if (node.x != otherNode.x || node.y != otherNode.y || node.z != otherNode.z) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+    }
+
+    public boolean reached(){ return reached; }
+
+
 }

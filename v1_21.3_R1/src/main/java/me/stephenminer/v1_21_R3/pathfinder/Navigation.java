@@ -1,15 +1,16 @@
 package me.stephenminer.v1_21_R3.pathfinder;
 
+import me.stephenminer.npc.util.Node;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.BlockTags;
+
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.pathfinder.NodeEvaluator;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
 import javax.annotation.Nullable;
-import java.util.Set;
 
 
 /**
@@ -54,6 +55,27 @@ public class Navigation {
         this.maxVisitedNodesMultiplier = 1.0F;
         this.requiredPathLength = 16.0F;
         this.pathFinder = new PathFinder(2,1);
+        this.moveControl = new NpcMoveControl(npc);
+    }
+
+    public boolean moveTo(double x, double y, double z, int range, double speedMod){
+        Path path = this.createPath(BlockPos.containing(x,y,z), range, false);
+        if (path == null){
+            this.path = null;
+            return false;
+        }else{
+            if (!path.sameAs(this.path))
+                this.path = path;
+            if (!this.hasPath()){
+                return false;
+            }else{
+                this.trimPath();
+                if (this.path.getNodeCount() <= 0) return false;
+
+                this.speedMod = speedMod;
+                return true;
+            }
+        }
     }
 
     protected Path createPath(BlockPos pos, int range, boolean startAbove){
@@ -62,7 +84,7 @@ public class Navigation {
         else if (this.path != null && !this.path.isDone() && pos.equals(this.targetPos)) return this.path;
         else{
             BlockPos start = startAbove ? npc.blockPosition().above() : npc.blockPosition();
-            Path path = pathFinder.findPath(world, start, targetPos, range);
+            Path path = pathFinder.findPath(world, start, pos, range);
             if (path != null){
                 this.targetPos = path.targetPos();
                 this.reachRange = range;
@@ -86,14 +108,19 @@ public class Navigation {
         double distSq = delta.lengthSqr();
 
         if (distSq < 0.05){
+            System.out.println(1);
             path.advance();
             if (path.isDone()) {
-                path = null;
+                if (!path.reached()){
+                    path = pathFinder.findPath(world, npc.blockPosition(), path.targetPos(), 10);
+                }else path = null;
                 return;
             }
         }
         if (!path.isDone()){
-
+         //   System.out.println(2);
+            Vec3 nextPos = this.path.getNextEntityPos(npc);
+            moveControl.setWantedPosition(nextPos.x, nextPos.y, nextPos.z, speedMod);
         }
        // Vec3 movement =
 
@@ -109,6 +136,25 @@ public class Navigation {
         this.timeoutLimit = 0.0;
         this.isStuck = false;
     }
+
+    protected void trimPath() {
+        if (this.path != null) {
+            for(int i = 0; i < this.path.getNodeCount(); i++) {
+                Node node = this.path.getNode(i);
+                Node otherNode = i + 1 < this.path.getNodeCount() ? this.path.getNode(i + 1) : null;
+                BlockState state = this.world.getBlockState(new BlockPos(node.x, node.y, node.z));
+                if (state.is(BlockTags.CAULDRONS)) {
+                    this.path.replaceNode(i, node.cloneMove(node.x, node.y + 1, node.z));
+                    if (otherNode != null && node.y >= otherNode.y) {
+                        this.path.replaceNode(i + 1, node.cloneMove(otherNode.x, node.y + 1, otherNode.z));
+                    }
+                }
+            }
+
+        }
+    }
+
+    public NpcMoveControl moveControl(){ return moveControl; }
 
     public PathFinder pathfinder(){ return pathFinder; }
 

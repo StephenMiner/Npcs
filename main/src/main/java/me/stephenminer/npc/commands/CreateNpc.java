@@ -8,6 +8,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -31,6 +32,7 @@ public class CreateNpc implements CommandExecutor, TabCompleter {
             int size = args.length;
             if (size < 2){
                 player.sendMessage(ChatColor.RED + "You need to put an id for your npc and then its name!");
+             
                 return false;
             }
             String id = args[0];
